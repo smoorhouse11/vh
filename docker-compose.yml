@@ -1,0 +1,43 @@
+version: "3.7"
+services:
+  mysql:
+    image: mysql:5.7
+    restart: always
+    command: --default-authentication-plugin=mysql_native_password
+    ports:
+      - "3306:3306"
+    networks:
+      - vh
+    environment:
+      MYSQL_USER: questions
+      MYSQL_PASSWORD: s3cr3t
+      MYSQL_DATABASE: questions_svc
+      MYSQL_ROOT_PASSWORD: r00t
+
+  nginx:
+    image: nginx:1-alpine
+    restart: on-failure
+    networks:
+      - vh
+    volumes:
+      - "./public/:/usr/src/app"
+      - "./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf:ro"
+    ports:
+      - "8080:80"
+    depends_on:
+      - php
+
+  php:
+    build:
+      context: .
+      dockerfile: docker/php/Dockerfile
+    networks:
+      - vh
+    restart: on-failure
+    volumes:
+      - "./:/usr/src/app"
+    depends_on:
+      - mysql
+
+networks:
+  vh:
